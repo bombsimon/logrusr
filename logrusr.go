@@ -18,13 +18,19 @@ const (
 
 type logrusr struct {
 	name   []string
+	level  int
 	logger logrus.FieldLogger
 }
 
 // NewLogger will return a new logr.Logger from a logrus.FieldLogger.
 func NewLogger(l logrus.FieldLogger, name ...string) logr.Logger {
+	return newLoggerWithLevel(l, 0, name...)
+}
+
+func newLoggerWithLevel(l logrus.FieldLogger, level int, name ...string) logr.Logger {
 	return &logrusr{
 		name:   name,
+		level:  level,
 		logger: l,
 	}
 }
@@ -42,7 +48,10 @@ func (l *logrusr) Enabled() bool {
 		log = t.Logger
 	}
 
-	return log.GetLevel() <= logrus.InfoLevel
+	// logrus.InfoLevel has value 4 so if the level on the logger is set to 0 we
+	// should only be seen as enabled if the logrus logger has a severity of
+	// info or higher.
+	return int(log.GetLevel())-logrusDiffToInfo >= l.level
 }
 
 // V is a part of the Logger interface. It will create a new instance of a
@@ -68,10 +77,8 @@ func (l *logrusr) V(level int) logr.InfoLogger {
 		oldLogger = log
 	}
 
-	// To make V(0) set the verbosity on the logger to InfoLevel instead of
-	// PanicLevel which is 0-level.
-	logrusLevel := logrus.Level(level + logrusDiffToInfo)
-	newLogger.SetLevel(logrusLevel)
+	// Keep the old logger level defined by the user.
+	newLogger.SetLevel(oldLogger.Level)
 
 	// Keep the formatter used on the old logger.
 	newLogger.SetFormatter(oldLogger.Formatter)
@@ -79,7 +86,7 @@ func (l *logrusr) V(level int) logr.InfoLogger {
 	// Add fields from the old logger (if there were any)
 	newLoggerWithFields := newLogger.WithFields(oldFields)
 
-	return NewLogger(newLoggerWithFields, l.name...)
+	return newLoggerWithLevel(newLoggerWithFields, level, l.name...)
 }
 
 // WithValues is a part of the Logger interface. This is equivalent to
