@@ -62,31 +62,7 @@ func (l *logrusr) Enabled() bool {
 // logger with level logrus.InfoLevel and V(2) would create a logger with level
 // logrus.TraceLevel.
 func (l *logrusr) V(level int) logr.InfoLogger {
-	var (
-		newLogger = logrus.New()
-		oldLogger *logrus.Logger
-		oldFields logrus.Fields
-	)
-
-	switch log := l.logger.(type) {
-	case *logrus.Entry:
-		oldLogger = log.Logger
-		oldFields = log.Data
-
-	case *logrus.Logger:
-		oldLogger = log
-	}
-
-	// Keep the old logger level defined by the user.
-	newLogger.SetLevel(oldLogger.Level)
-
-	// Keep the formatter used on the old logger.
-	newLogger.SetFormatter(oldLogger.Formatter)
-
-	// Add fields from the old logger (if there were any)
-	newLoggerWithFields := newLogger.WithFields(oldFields)
-
-	return newLoggerWithLevel(newLoggerWithFields, level, l.name...)
+	return newLoggerWithLevel(l.logger, level, l.name...)
 }
 
 // WithValues is a part of the Logger interface. This is equivalent to
