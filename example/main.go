@@ -38,4 +38,7 @@ func main() {
 	log.V(2).Info("you should NOT see this")
 	log.Error(nil, "uh oh", "trouble", true, "reasons", []float64{0.1, 0.11, 3.14})
 	log.Error(errors.New("caught error"), "goodbye", "code", -1)
+
+	log = log.WithName("subpackage")
+	log.Info("hello from subpackage")
 }

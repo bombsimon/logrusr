@@ -2,6 +2,7 @@ package logrusr
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/sirupsen/logrus"
@@ -16,12 +17,14 @@ const (
 )
 
 type logrusr struct {
+	name   []string
 	logger logrus.FieldLogger
 }
 
 // NewLogger will return a new logr.Logger from a logrus.FieldLogger.
-func NewLogger(l logrus.FieldLogger) logr.Logger {
+func NewLogger(l logrus.FieldLogger, name ...string) logr.Logger {
 	return &logrusr{
+		name:   name,
 		logger: l,
 	}
 }
@@ -76,7 +79,7 @@ func (l *logrusr) V(level int) logr.InfoLogger {
 	// Add fields from the old logger (if there were any)
 	newLoggerWithFields := newLogger.WithFields(oldFields)
 
-	return NewLogger(newLoggerWithFields)
+	return NewLogger(newLoggerWithFields, l.name...)
 }
 
 // WithValues is a part of the Logger interface. This is equivalent to
@@ -84,17 +87,19 @@ func (l *logrusr) V(level int) logr.InfoLogger {
 // instead of a map as input. If an odd number of arguments are sent all values
 // will be discarded.
 func (l *logrusr) WithValues(keysAndValues ...interface{}) logr.Logger {
-	newLogger := l.logger
+	newLogrus := l.logger
 	newFields := listToLogrusFields(keysAndValues...)
 
-	return NewLogger(newLogger.WithFields(newFields))
+	return NewLogger(newLogrus.WithFields(newFields), l.name...)
 }
 
 // WithName is a part of the Logger interface. This will set the key "name" as a
 // logrus field.
 func (l *logrusr) WithName(name string) logr.Logger {
+	l.name = append(l.name, name)
+
 	l.logger = l.logger.WithFields(logrus.Fields{
-		"name": name,
+		"logger": strings.Join(l.name, "."),
 	})
 
 	return l
