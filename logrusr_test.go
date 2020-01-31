@@ -85,7 +85,7 @@ func TestLogging(t *testing.T) {
 			assertions: nil,
 		},
 		{
-			description: "V(2) logging with trace level set is not shown",
+			description: "V(2) logging with trace level set is shown",
 			logrusLogger: func() logrus.FieldLogger {
 				l := logrus.New()
 				l.SetLevel(logrus.TraceLevel)

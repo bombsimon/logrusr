@@ -24,19 +24,21 @@ type logrusr struct {
 
 // NewLogger will return a new logr.Logger from a logrus.FieldLogger.
 func NewLogger(l logrus.FieldLogger, name ...string) logr.Logger {
-	return newLoggerWithLevel(l, 0, name...)
-}
-
-func newLoggerWithLevel(l logrus.FieldLogger, level int, name ...string) logr.Logger {
 	return &logrusr{
 		name:   name,
-		level:  level,
+		level:  0,
 		logger: l,
 	}
 }
 
 // Enabled is a part of the InfoLogger interface. It will return true if the
 // logrus.Logger has a level set to logrus.InfoLevel or higher (Debug/Trace).
+// According to the documentation, level V(0) should be equivalent as calling
+// Info() directly on the logger. To ensure this the constant `logrusDiffToInfo`
+// will be added to all passed values so that V(0) creates a logger with level
+// logrus.InfoLevel and V(2) would create a logger with level logrus.TraceLevel.
+// This menas that if logrus is  set to logrus.InfoLevel or **higher** this
+// method will return true, otherwise false.
 func (l *logrusr) Enabled() bool {
 	var log *logrus.Logger
 
@@ -54,15 +56,12 @@ func (l *logrusr) Enabled() bool {
 	return int(log.GetLevel())-logrusDiffToInfo >= l.level
 }
 
-// V is a part of the Logger interface. It will create a new instance of a
-// *logrus.Logger instead of changing the current one and the new logger will be
-// retruned. According to the documentation level V(0) should be equivalent as
-// calling Info() directly on the logger. To ensure this the constant
-// `logrusDiffToInfo` will be added to all passed values so that V(0) creates a
-// logger with level logrus.InfoLevel and V(2) would create a logger with level
-// logrus.TraceLevel.
+// V is a part of the Logger interface. Calling the method will change the
+// global log severity for the logr implementation.
 func (l *logrusr) V(level int) logr.InfoLogger {
-	return newLoggerWithLevel(l.logger, level, l.name...)
+	l.level = level
+
+	return l
 }
 
 // WithValues is a part of the Logger interface. This is equivalent to
@@ -70,14 +69,15 @@ func (l *logrusr) V(level int) logr.InfoLogger {
 // instead of a map as input. If an odd number of arguments are sent all values
 // will be discarded.
 func (l *logrusr) WithValues(keysAndValues ...interface{}) logr.Logger {
-	newLogrus := l.logger
-	newFields := listToLogrusFields(keysAndValues...)
+	l.logger = l.logger.WithFields(
+		listToLogrusFields(keysAndValues...),
+	)
 
-	return NewLogger(newLogrus.WithFields(newFields), l.name...)
+	return l
 }
 
-// WithName is a part of the Logger interface. This will set the key "name" as a
-// logrus field.
+// WithName is a part of the Logger interface. This will set the key "logger" as
+// a logrus field to identify the instance.
 func (l *logrusr) WithName(name string) logr.Logger {
 	l.name = append(l.name, name)
 
@@ -100,7 +100,9 @@ func (l *logrusr) Info(msg string, keysAndValues ...interface{}) {
 		Info(msg)
 }
 
-// Error logs error messages.
+// Error logs error messages. Since the log will be written with `Error` level
+// it won't show if the severity of the underlying logrus logger is less than
+// Error.
 func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
 	l.logger.
 		WithFields(listToLogrusFields(keysAndValues...)).
