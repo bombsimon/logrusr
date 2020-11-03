@@ -28,8 +28,8 @@ func NewLogger(l logrus.FieldLogger, name ...string) logr.Logger {
 	return NewLoggerWithFormatter(l, nil, name...)
 }
 
-// NewLoggerWithFormatter will return a new logr.Logger from a logrus.FieldLogger that uses provided function to
-// format complex data types.
+// NewLoggerWithFormatter will return a new logr.Logger from a
+// logrus.FieldLogger that uses provided function to format complex data types.
 func NewLoggerWithFormatter(l logrus.FieldLogger, formatter func(interface{}) string, name ...string) logr.Logger {
 	return &logrusr{
 		name:             name,
@@ -131,7 +131,6 @@ func listToLogrusFields(formatter func(interface{}) string, keysAndValues ...int
 		k, v := keysAndValues[i], keysAndValues[i+1]
 
 		if s, ok := k.(string); ok {
-
 			// Try to avoid marshaling known types.
 			switch vVal := v.(type) {
 			case int, int8, int16, int32, int64,
