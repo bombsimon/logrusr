@@ -19,8 +19,7 @@ import (
 func main() {
     var log logr.Logger
 
-    logger = logrus.New()
-    log = logrusr.NewLogger(logger)
+    log = logrusr.NewLogger(logrus.New())
 
     log.Info("Logr in action!", "the answer", 42)
 }
