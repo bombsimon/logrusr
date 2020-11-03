@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -18,6 +19,7 @@ func TestLogging(t *testing.T) {
 		description  string
 		logrusLogger func() logrus.FieldLogger
 		logFunc      func(log logr.Logger)
+		formatter    func(interface{}) string
 		assertions   map[string]string
 	}{
 		{
@@ -189,6 +191,23 @@ func TestLogging(t *testing.T) {
 				"list":   "[1,2,3]",
 			},
 		},
+		{
+			description: "custom formatter is used",
+			logrusLogger: func() logrus.FieldLogger {
+				return logrus.New()
+			},
+			logFunc: func(log logr.Logger) {
+				log.Info("hello, world", "list", []int{1, 2, 3})
+			},
+			formatter: func(val interface{}) string {
+				return fmt.Sprintf("%v", val)
+			},
+			assertions: map[string]string{
+				"level": "info",
+				"msg":   "hello, world",
+				"list":  "[1 2 3]",
+			},
+		},
 	}
 
 	for _, tc := range cases {
@@ -212,7 +231,7 @@ func TestLogging(t *testing.T) {
 
 			// Send the created logger to the test case to invoke desired
 			// logging.
-			tc.logFunc(NewLogger(logrusLogger))
+			tc.logFunc(NewLoggerWithFormatter(logrusLogger, tc.formatter))
 
 			if tc.assertions == nil {
 				assert.Equal(t, logWriter.Len(), 0)
