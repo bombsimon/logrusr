@@ -67,9 +67,10 @@ func (l *logrusr) Enabled() bool {
 // V is a part of the Logger interface. Calling the method will change the
 // global log severity for the logr implementation.
 func (l *logrusr) V(level int) logr.InfoLogger {
-	l.level = level
+	newLogger := l.copyLogger()
+	newLogger.level = level
 
-	return l
+	return newLogger
 }
 
 // WithValues is a part of the Logger interface. This is equivalent to
@@ -77,23 +78,25 @@ func (l *logrusr) V(level int) logr.InfoLogger {
 // instead of a map as input. If an odd number of arguments are sent all values
 // will be discarded.
 func (l *logrusr) WithValues(keysAndValues ...interface{}) logr.Logger {
-	l.logger = l.logger.WithFields(
+	newLogger := l.copyLogger()
+	newLogger.logger = l.logger.WithFields(
 		listToLogrusFields(l.defaultFormatter, keysAndValues...),
 	)
 
-	return l
+	return newLogger
 }
 
 // WithName is a part of the Logger interface. This will set the key "logger" as
 // a logrus field to identify the instance.
 func (l *logrusr) WithName(name string) logr.Logger {
-	l.name = append(l.name, name)
+	newLogger := l.copyLogger()
+	newLogger.name = append(newLogger.name, name)
 
-	l.logger = l.logger.WithFields(logrus.Fields{
-		"logger": strings.Join(l.name, "."),
-	})
+	newLogger.logger = l.logger.WithField(
+		"logger", strings.Join(newLogger.name, "."),
+	)
 
-	return l
+	return newLogger
 }
 
 // Info logs info messages if the logger is enabled, that is if the level on the
@@ -154,4 +157,17 @@ func listToLogrusFields(formatter func(interface{}) string, keysAndValues ...int
 	}
 
 	return f
+}
+
+func (l *logrusr) copyLogger() *logrusr {
+	newLogger := &logrusr{
+		name:             make([]string, len(l.name)),
+		level:            l.level,
+		defaultFormatter: l.defaultFormatter,
+		logger:           l.logger,
+	}
+
+	copy(newLogger.name, l.name)
+
+	return newLogger
 }
