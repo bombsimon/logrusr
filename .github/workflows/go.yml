@@ -1,35 +1,27 @@
 on:
   - push
   - pull_request
-    
+
 name: Test, lint and coverage
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13.x
-
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
-      - name: Install golangci-lint
-        run: |
-          go get github.com/golangci/golangci-lint/cmd/golangci-lint
-
-      - name: Run linters
-        run: |
-          export PATH=$PATH:$(go env GOPATH)/bin   
-          golangci-lint run
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.40
 
   test:
     strategy:
       matrix:
         go-version:
-          - 1.13.x
+          - 1.15.x
+          - 1.16.x
         platform:
           - ubuntu-latest
           - macos-latest
@@ -46,7 +38,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Run tests
-        run: go test -v -covermode=count 
+        run: go test -v -covermode=count
 
   coverage:
     runs-on: ubuntu-latest
@@ -60,9 +52,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v1
 
-      - name: Calc coverage 
+      - name: Calc coverage
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin   
+          export PATH=$PATH:$(go env GOPATH)/bin
           go test -v -covermode=count -coverprofile=coverage.out
 
       - name: Convert coverage to lcov
