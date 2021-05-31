@@ -17,10 +17,10 @@ import (
 )
 
 func main() {
-    var log logr.Logger
+	logrusLog := logrus.New()
+	log := logrusr.NewLogger(logrusLog)
 
-    log = logrusr.NewLogger(logrus.New())
-
+	log = log.WithName("MyName").WithValues("user", "you")
     log.Info("Logr in action!", "the answer", 42)
 }
 ```
