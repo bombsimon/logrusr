@@ -10,7 +10,7 @@ import (
 
 func main() {
 	logrusLog := logrus.New()
-	log := logrusr.NewLogger(logrusLog)
+	log := logrusr.New(logrusLog)
 
 	log = log.WithName("MyName").WithValues("user", "you")
 	log.Info("hello", "val1", 1, "val2", map[string]int{"k": 1})
@@ -25,7 +25,7 @@ func main() {
 		"some_field":    "some_value",
 		"another_field": 42,
 	})
-	log = logrusr.NewLogger(entryLog)
+	log = logrusr.New(entryLog)
 
 	log = log.WithName("MyName").WithValues("user", "you")
 	log.Info("hello", "val1", 1, "val2", map[string]int{"k": 1})
@@ -45,6 +45,9 @@ func main() {
 	logrusLog = logrus.New()
 	logrusLog.SetLevel(logrus.TraceLevel)
 
-	log = logrusr.NewLogger(logrusLog)
+	log = logrusr.New(
+		logrusLog,
+		logrusr.WithReportCaller(),
+	).WithCallDepth(0)
 	log.V(2).Info("NOW you should see this")
 }

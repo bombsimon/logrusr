@@ -2,6 +2,9 @@ package logrusr
 
 import (
 	"encoding/json"
+	"fmt"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -12,33 +15,63 @@ import (
 // directly on the logger should be the same as calling them on V(0). Since
 // logrus level 0 is PanicLevel and Infolevel doesn't start until V(4) we use
 // this constant to be able to calculate what V(n) values should mean.
-const (
-	logrusDiffToInfo = 4
-)
+const logrusDiffToInfo = 4
+
+// FormatFunc is the function to format log values with for non primitive data.
+// By default, this is empty and the data will be JSON marshaled.
+type FormatFunc func(interface{}) string
+
+// Option is options to give when construction a logrusr logger.
+type Option func(l *logrusr)
+
+// WithFormatter will set the FormatFunc to use.
+func WithFormatter(f FormatFunc) Option {
+	return func(l *logrusr) {
+		l.defaultFormatter = f
+	}
+}
+
+// WithReportCaller will enable reporting of the caller.
+func WithReportCaller() Option {
+	return func(l *logrusr) {
+		l.reportCaller = true
+	}
+}
+
+// WithName will set an initial name instead of having to call `WithName` on the
+// logger itself after constructing it.
+func WithName(name ...string) Option {
+	return func(l *logrusr) {
+		l.name = name
+	}
+}
 
 type logrusr struct {
 	name             []string
+	depth            int
+	reportCaller     bool
 	logger           logrus.FieldLogger
-	defaultFormatter func(interface{}) string
+	defaultFormatter FormatFunc
 }
 
-// NewLogger will return a new logr.Logger created from a logrus.FieldLogger.
-func NewLogger(l logrus.FieldLogger, name ...string) logr.Logger {
-	return NewLoggerWithFormatter(l, nil, name...)
-}
+// New will return a new logr.Logger created from a logrus.FieldLogger.
+func New(l logrus.FieldLogger, opts ...Option) logr.Logger {
+	logger := &logrusr{
+		depth:  0,
+		logger: l,
+	}
 
-// NewLoggerWithFormatter will return a new logr.Logger from a
-// logrus.FieldLogger that uses provided function to format complex data types.
-func NewLoggerWithFormatter(l logrus.FieldLogger, formatter func(interface{}) string, name ...string) logr.Logger {
-	return logr.New(&logrusr{
-		name:             name,
-		logger:           l,
-		defaultFormatter: formatter,
-	})
+	for _, o := range opts {
+		o(logger)
+	}
+
+	return logr.New(logger)
 }
 
 // Init receives optional information about the library.
-func (l *logrusr) Init(_ logr.RuntimeInfo) {}
+func (l *logrusr) Init(ri logr.RuntimeInfo) {
+	l.depth = ri.CallDepth
+}
 
 // Enabled tests whether this Logger is enabled. It will return true if the
 // logrus.Logger has a level set to logrus.InfoLevel or higher (Warn/Panic).
@@ -72,6 +105,10 @@ func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
 		return
 	}
 
+	if c := l.caller(); c != "" {
+		l.logger = l.logger.WithField("caller", c)
+	}
+
 	l.logger.
 		WithFields(listToLogrusFields(l.defaultFormatter, keysAndValues...)).
 		Info(msg)
@@ -81,6 +118,10 @@ func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
 // it won't show if the severity of the underlying logrus logger is less than
 // Error.
 func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
+	if c := l.caller(); c != "" {
+		l.logger = l.logger.WithField("caller", c)
+	}
+
 	l.logger.
 		WithFields(listToLogrusFields(l.defaultFormatter, keysAndValues...)).
 		WithError(err).
@@ -115,9 +156,9 @@ func (l *logrusr) WithName(name string) logr.LogSink {
 
 // listToLogrusFields converts a list of arbitrary length to key/value paris.
 func listToLogrusFields(formatter func(interface{}) string, keysAndValues ...interface{}) logrus.Fields {
-	var f = logrus.Fields{}
+	f := make(logrus.Fields)
 
-	// Skip all fields if it's not an even lengthed list.
+	// Skip all fields if it's not an even length list.
 	if len(keysAndValues)%2 != 0 {
 		return f
 	}
@@ -156,11 +197,40 @@ func listToLogrusFields(formatter func(interface{}) string, keysAndValues ...int
 func (l *logrusr) copyLogger() *logrusr {
 	newLogger := &logrusr{
 		name:             make([]string, len(l.name)),
-		defaultFormatter: l.defaultFormatter,
+		depth:            l.depth,
+		reportCaller:     l.reportCaller,
 		logger:           l.logger,
+		defaultFormatter: l.defaultFormatter,
 	}
 
 	copy(newLogger.name, l.name)
 
 	return newLogger
+}
+
+// WithCallDepth implements the optional WithCallDepth to offset the call stack
+// when reporting caller.
+func (l *logrusr) WithCallDepth(depth int) logr.LogSink {
+	newLogger := l.copyLogger()
+	newLogger.depth = depth
+
+	return newLogger
+}
+
+// caller will return the caller of the logging method.
+func (l *logrusr) caller() string {
+	// Check if we should even report the caller.
+	if !l.reportCaller {
+		return ""
+	}
+
+	// +1 for this frame.
+	// +1 for frame calling here (Info/Error)
+	// +1 for logr frame
+	_, file, line, ok := runtime.Caller(l.depth + 3)
+	if !ok {
+		return ""
+	}
+
+	return fmt.Sprintf("%s:%d", filepath.Base(file), line)
 }

@@ -231,7 +231,7 @@ func TestLogging(t *testing.T) {
 
 			// Send the created logger to the test case to invoke desired
 			// logging.
-			tc.logFunc(NewLoggerWithFormatter(logrusLogger, tc.formatter))
+			tc.logFunc(New(logrusLogger, WithFormatter(tc.formatter)))
 
 			if tc.assertions == nil {
 				assert.Equal(t, logWriter.Len(), 0)
