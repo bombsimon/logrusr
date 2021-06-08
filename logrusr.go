@@ -43,6 +43,10 @@ func WithReportCaller() Option {
 func WithName(name ...string) Option {
 	return func(l *logrusr) {
 		l.name = name
+
+		l.logger = l.logger.WithField(
+			"logger", strings.Join(l.name, "."),
+		)
 	}
 }
 

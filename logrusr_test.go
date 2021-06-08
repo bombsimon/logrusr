@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -15,11 +16,15 @@ import (
 )
 
 func TestLogging(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		description  string
 		logrusLogger func() logrus.FieldLogger
 		logFunc      func(log logr.Logger)
 		formatter    func(interface{}) string
+		reportCaller bool
+		defaultName  []string
 		assertions   map[string]string
 	}{
 		{
@@ -208,6 +213,66 @@ func TestLogging(t *testing.T) {
 				"list":  "[1 2 3]",
 			},
 		},
+		{
+			description: "with default name",
+			logrusLogger: func() logrus.FieldLogger {
+				return logrus.New()
+			},
+			logFunc: func(log logr.Logger) {
+				log.Info("hello, world")
+			},
+			defaultName: []string{"some", "name"},
+			assertions: map[string]string{
+				"level":  "info",
+				"msg":    "hello, world",
+				"logger": "some.name",
+			},
+		},
+		{
+			description: "without report caller",
+			logrusLogger: func() logrus.FieldLogger {
+				return logrus.New()
+			},
+			logFunc: func(log logr.Logger) {
+				log.Info("hello, world")
+			},
+			reportCaller: false,
+			assertions: map[string]string{
+				"level":   "info",
+				"msg":     "hello, world",
+				"-caller": "no-caller",
+			},
+		},
+		{
+			description: "with report caller",
+			logrusLogger: func() logrus.FieldLogger {
+				return logrus.New()
+			},
+			logFunc: func(log logr.Logger) {
+				log.Info("hello, world")
+			},
+			reportCaller: true,
+			assertions: map[string]string{
+				"level":  "info",
+				"msg":    "hello, world",
+				"caller": `~logrusr_test.go:\d+`,
+			},
+		},
+		{
+			description: "with report caller and depth",
+			logrusLogger: func() logrus.FieldLogger {
+				return logrus.New()
+			},
+			logFunc: func(log logr.Logger) {
+				log.WithCallDepth(2).Info("hello, world")
+			},
+			reportCaller: true,
+			assertions: map[string]string{
+				"level":  "info",
+				"msg":    "hello, world",
+				"caller": `~testing.go:\d+`,
+			},
+		},
 	}
 
 	for _, tc := range cases {
@@ -231,7 +296,19 @@ func TestLogging(t *testing.T) {
 
 			// Send the created logger to the test case to invoke desired
 			// logging.
-			tc.logFunc(New(logrusLogger, WithFormatter(tc.formatter)))
+			opts := []Option{
+				WithFormatter(tc.formatter),
+			}
+
+			if tc.reportCaller {
+				opts = append(opts, WithReportCaller())
+			}
+
+			if tc.defaultName != nil {
+				opts = append(opts, WithName(tc.defaultName...))
+			}
+
+			tc.logFunc(New(logrusLogger, opts...))
 
 			if tc.assertions == nil {
 				assert.Equal(t, logWriter.Len(), 0)
@@ -252,6 +329,14 @@ func TestLogging(t *testing.T) {
 					assert.False(t, ok)
 					assert.Empty(t, field)
 
+					continue
+				}
+
+				// Annotate regexp matches with the value starting with a tilde
+				// (~). The tilde will be dropped an used to compile a regexp to
+				// match the field.
+				if strings.HasPrefix(v, "~") {
+					assert.Regexp(t, regexp.MustCompile(v[1:]), field)
 					continue
 				}
 
