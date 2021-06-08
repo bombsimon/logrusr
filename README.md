@@ -11,9 +11,9 @@ A [logr](https://github.com/go-logr/logr) implementation using
 
 ```go
 import (
-    "github.com/sirupsen/logrus"
-    "github.com/bombsimon/logrusr"
+    "github.com/bombsimon/logrusr/v2"
     "github.com/go-logr/logr"
+    "github.com/sirupsen/logrus"
 )
 
 func main() {
