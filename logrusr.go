@@ -101,10 +101,6 @@ func (l *logrusr) Enabled(level int) bool {
 // Info logs info messages if the logger is enabled, that is if the level on the
 // logger is set to logrus.InfoLevel or less.
 func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
-	if !l.Enabled(level) {
-		return
-	}
-
 	if c := l.caller(); c != "" {
 		l.logger = l.logger.WithField("caller", c)
 	}
