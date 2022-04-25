@@ -8,20 +8,24 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.40
+          version: latest
 
   test:
     strategy:
       matrix:
         go-version:
-          - 1.15.x
-          - 1.16.x
+          - 1.17.x
+          - 1.18.x
         platform:
           - ubuntu-latest
           - macos-latest
@@ -30,12 +34,12 @@ jobs:
     steps:
       - name: Install Go
         if: success()
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
 
       - name: Run tests
         run: go test -v -covermode=count
@@ -45,12 +49,12 @@ jobs:
     steps:
       - name: Install Go
         if: success()
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.13.x
+          go-version: 1.18.x
 
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
 
       - name: Calc coverage
         run: |
@@ -58,13 +62,13 @@ jobs:
           go test -v -covermode=count -coverprofile=coverage.out
 
       - name: Convert coverage to lcov
-        uses: jandelgado/gcov2lcov-action@v1.0.0
+        uses: jandelgado/gcov2lcov-action@v1.0.8
         with:
-            infile: coverage.out
-            outfile: coverage.lcov
+          infile: coverage.out
+          outfile: coverage.lcov
 
       - name: Coveralls
         uses: coverallsapp/github-action@v1.0.1
         with:
-            github-token: ${{ secrets.github_token }}
-            path-to-lcov: coverage.lcov
+          github-token: ${{ secrets.github_token }}
+          path-to-lcov: coverage.lcov

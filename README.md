@@ -1,8 +1,8 @@
 # Logrusr
 
+[![GitHub Actions](https://github.com/bombsimon/logrusr/actions/workflows/go.yml/badge.svg)](https://github.com/bombsimon/logrusr/actions/workflows/go.yml)
 [![Coverage Status](https://coveralls.io/repos/github/bombsimon/logrusr/badge.svg?branch=master)](https://coveralls.io/github/bombsimon/logrusr?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bombsimon/logrusr)](https://goreportcard.com/report/github.com/bombsimon/logrusr)
-[![golangci-lint](https://golangci.com/badges/github.com/bombsimon/logrusr.svg)](https://golangci.com/r/github.com/bombsimon/logrusr)
 
 A [logr](https://github.com/go-logr/logr) implementation using
 [logrus](https://github.com/sirupsen/logrus).
