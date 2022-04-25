@@ -18,7 +18,7 @@ import (
 
 func main() {
     logrusLog := logrus.New()
-    log := logrusr.NewLogger(logrusLog)
+    log := logrusr.New(logrusLog)
 
     log = log.WithName("MyName").WithValues("user", "you")
     log.Info("Logr in action!", "the answer", 42)
@@ -29,6 +29,6 @@ For more details, see [example](example/main.go).
 
 ## Implementation details
 
-The NewLogger method takes a `logrus.FieldLogger` interface as input which means
+The New method takes a `logrus.FieldLogger` interface as input which means
 this works with both `logrus.Logger` and `logrus.Entry`. This is currently a
 quite naive implementation in early state. Use with caution.
