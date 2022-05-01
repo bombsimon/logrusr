@@ -54,15 +54,18 @@ type logrusr struct {
 	name             []string
 	depth            int
 	reportCaller     bool
-	logger           logrus.FieldLogger
+	logger           *logrus.Entry
 	defaultFormatter FormatFunc
 }
 
 // New will return a new logr.Logger created from a logrus.FieldLogger.
 func New(l logrus.FieldLogger, opts ...Option) logr.Logger {
+	// Immediately convert the FieldLogger to an Entry so we don't have to type
+	// cast and can use methods that exist on the Entry but not the FieldLogger
+	// interface.
 	logger := &logrusr{
 		depth:  0,
-		logger: l,
+		logger: l.WithFields(logrus.Fields{}),
 	}
 
 	for _, o := range opts {
@@ -86,30 +89,21 @@ func (l *logrusr) Init(ri logr.RuntimeInfo) {
 // This menas that if logrus is  set to logrus.InfoLevel or **higher** this
 // method will return true, otherwise false.
 func (l *logrusr) Enabled(level int) bool {
-	var log *logrus.Logger
-
-	switch t := l.logger.(type) {
-	case *logrus.Logger:
-		log = t
-
-	case *logrus.Entry:
-		log = t.Logger
-	}
-
 	// logrus.InfoLevel has value 4 so if the level on the logger is set to 0 we
 	// should only be seen as enabled if the logrus logger has a severity of
 	// info or higher.
-	return log.IsLevelEnabled(logrus.Level(level + logrusDiffToInfo))
+	return l.logger.Logger.IsLevelEnabled(logrus.Level(level + logrusDiffToInfo))
 }
 
 // Info logs info messages if the logger is enabled, that is if the level on the
 // logger is set to logrus.InfoLevel or less.
 func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
+	log := l.logger
 	if c := l.caller(); c != "" {
-		l.logger = l.logger.WithField("caller", c)
+		log = log.WithField("caller", c)
 	}
 
-	log := l.logger.WithFields(listToLogrusFields(l.defaultFormatter, keysAndValues...))
+	log = log.WithFields(listToLogrusFields(l.defaultFormatter, keysAndValues...))
 
 	if level <= 0 {
 		log.Info(msg)
@@ -124,11 +118,12 @@ func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
 // it won't show if the severity of the underlying logrus logger is less than
 // Error.
 func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
+	log := l.logger
 	if c := l.caller(); c != "" {
-		l.logger = l.logger.WithField("caller", c)
+		log = log.WithField("caller", c)
 	}
 
-	l.logger.
+	log.
 		WithFields(listToLogrusFields(l.defaultFormatter, keysAndValues...)).
 		WithError(err).
 		Error(msg)
@@ -205,7 +200,7 @@ func (l *logrusr) copyLogger() *logrusr {
 		name:             make([]string, len(l.name)),
 		depth:            l.depth,
 		reportCaller:     l.reportCaller,
-		logger:           l.logger,
+		logger:           l.logger.Dup(),
 		defaultFormatter: l.defaultFormatter,
 	}
 
