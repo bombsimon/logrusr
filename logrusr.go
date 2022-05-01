@@ -109,9 +109,15 @@ func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
 		l.logger = l.logger.WithField("caller", c)
 	}
 
-	l.logger.
-		WithFields(listToLogrusFields(l.defaultFormatter, keysAndValues...)).
-		Info(msg)
+	log := l.logger.WithFields(listToLogrusFields(l.defaultFormatter, keysAndValues...))
+
+	if level <= 0 {
+		log.Info(msg)
+	} else if level == 1 {
+		log.Debug(msg)
+	} else {
+		log.Trace(msg)
+	}
 }
 
 // Error logs error messages. Since the log will be written with `Error` level

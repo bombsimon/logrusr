@@ -87,9 +87,26 @@ func TestLogging(t *testing.T) {
 				return logrus.New()
 			},
 			logFunc: func(log logr.Logger) {
+				log.V(1).Info("hello, world")
 				log.V(2).Info("hello, world")
 			},
 			assertions: nil,
+		},
+		{
+			description: "V(1) logging with debug level set is shown",
+			logrusLogger: func() logrus.FieldLogger {
+				l := logrus.New()
+				l.SetLevel(logrus.TraceLevel)
+
+				return l
+			},
+			logFunc: func(log logr.Logger) {
+				log.V(1).Info("hello, world")
+			},
+			assertions: map[string]string{
+				"level": "debug",
+				"msg":   "hello, world",
+			},
 		},
 		{
 			description: "V(2) logging with trace level set is shown",
@@ -103,7 +120,7 @@ func TestLogging(t *testing.T) {
 				log.V(2).Info("hello, world")
 			},
 			assertions: map[string]string{
-				"level": "info",
+				"level": "trace",
 				"msg":   "hello, world",
 			},
 		},
