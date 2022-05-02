@@ -20,7 +20,7 @@ func TestLogging(t *testing.T) {
 
 	cases := []struct {
 		description  string
-		logrusLogger func() logrus.FieldLogger
+		logrusLevel  logrus.Level
 		logFunc      func(log logr.Logger)
 		formatter    func(interface{}) string
 		reportCaller bool
@@ -29,9 +29,6 @@ func TestLogging(t *testing.T) {
 	}{
 		{
 			description: "basic logging",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world")
 			},
@@ -42,9 +39,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "set name once",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.WithName("main").Info("hello, world")
 			},
@@ -56,9 +50,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "set name twice",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.WithName("main").WithName("subpackage").Info("hello, world")
 			},
@@ -70,9 +61,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "V(0) logging with info level set is shown",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.V(0).Info("hello, world")
 			},
@@ -83,9 +71,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "V(2) logging with info level set is not shown",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.V(1).Info("hello, world")
 				log.V(2).Info("hello, world")
@@ -94,12 +79,7 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "V(1) logging with debug level set is shown",
-			logrusLogger: func() logrus.FieldLogger {
-				l := logrus.New()
-				l.SetLevel(logrus.TraceLevel)
-
-				return l
-			},
+			logrusLevel: logrus.DebugLevel,
 			logFunc: func(log logr.Logger) {
 				log.V(1).Info("hello, world")
 			},
@@ -110,12 +90,7 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "V(2) logging with trace level set is shown",
-			logrusLogger: func() logrus.FieldLogger {
-				l := logrus.New()
-				l.SetLevel(logrus.TraceLevel)
-
-				return l
-			},
+			logrusLevel: logrus.TraceLevel,
 			logFunc: func(log logr.Logger) {
 				log.V(2).Info("hello, world")
 			},
@@ -126,12 +101,7 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "negative V-logging truncates to info",
-			logrusLogger: func() logrus.FieldLogger {
-				l := logrus.New()
-				l.SetLevel(logrus.TraceLevel)
-
-				return l
-			},
+			logrusLevel: logrus.TraceLevel,
 			logFunc: func(log logr.Logger) {
 				log.V(-10).Info("hello, world")
 			},
@@ -142,12 +112,7 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "addative V-logging, negatives ignored",
-			logrusLogger: func() logrus.FieldLogger {
-				l := logrus.New()
-				l.SetLevel(logrus.TraceLevel)
-
-				return l
-			},
+			logrusLevel: logrus.TraceLevel,
 			logFunc: func(log logr.Logger) {
 				log.V(0).V(1).V(-20).V(1).Info("hello, world")
 			},
@@ -158,9 +123,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "arguments are added while calling Info()",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world", "animal", "walrus")
 			},
@@ -172,9 +134,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "arguments are added after WithValues()",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.WithValues("color", "green").Info("hello, world", "animal", "walrus")
 			},
@@ -187,9 +146,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "error logs have the approperate information",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.Error(errors.New("this is error"), "error occurred")
 			},
@@ -201,12 +157,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "error shown with lov severity logger",
-			logrusLogger: func() logrus.FieldLogger {
-				l := logrus.New()
-				l.SetLevel(logrus.ErrorLevel)
-
-				return l
-			},
 			logFunc: func(log logr.Logger) {
 				log.Error(errors.New("this is error"), "error occurred")
 			},
@@ -218,9 +168,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "bad number of arguments discards all",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world", "animal", "walrus", "foo")
 			},
@@ -232,9 +179,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "complex data types are converted",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world", "animal", []byte("walrus"), "list", []int{1, 2, 3})
 			},
@@ -247,9 +191,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "custom formatter is used",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world", "list", []int{1, 2, 3})
 			},
@@ -264,9 +205,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "with default name",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world")
 			},
@@ -279,13 +217,9 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "without report caller",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world")
 			},
-			reportCaller: false,
 			assertions: map[string]string{
 				"level":   "info",
 				"msg":     "hello, world",
@@ -294,9 +228,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "with report caller",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world")
 			},
@@ -309,9 +240,6 @@ func TestLogging(t *testing.T) {
 		},
 		{
 			description: "with report caller and depth",
-			logrusLogger: func() logrus.FieldLogger {
-				return logrus.New()
-			},
 			logFunc: func(log logr.Logger) {
 				log.WithCallDepth(2).Info("hello, world")
 			},
@@ -329,18 +257,12 @@ func TestLogging(t *testing.T) {
 			// Use a buffer for our output.
 			logWriter := &bytes.Buffer{}
 
-			// Create the logger according to the test case.
-			logrusLogger := tc.logrusLogger()
+			logrusLogger := logrus.New()
+			logrusLogger.SetOutput(logWriter)
+			logrusLogger.SetFormatter(&logrus.JSONFormatter{})
 
-			switch l := logrusLogger.(type) {
-			case *logrus.Logger:
-				l.SetOutput(logWriter)
-				l.SetFormatter(&logrus.JSONFormatter{})
-			case *logrus.Entry:
-				l.Logger.SetOutput(logWriter)
-				l.Logger.SetFormatter(&logrus.JSONFormatter{})
-			default:
-				t.FailNow()
+			if tc.logrusLevel != logrus.PanicLevel {
+				logrusLogger.SetLevel(tc.logrusLevel)
 			}
 
 			// Send the created logger to the test case to invoke desired
