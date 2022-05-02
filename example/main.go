@@ -49,5 +49,10 @@ func main() {
 		logrusLog,
 		logrusr.WithReportCaller(),
 	).WithCallDepth(0)
-	log.V(2).Info("NOW you should see this")
+
+	log.V(0).Info("you should see this as info")
+	log.V(1).Info("you should see this as debug")
+	log.V(2).Info("you should see this as trace")
+	log.V(1).V(1).Info("you should see this as trace")
+	log.V(10).Info("you should not see this")
 }

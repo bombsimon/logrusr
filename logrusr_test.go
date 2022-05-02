@@ -125,6 +125,38 @@ func TestLogging(t *testing.T) {
 			},
 		},
 		{
+			description: "negative V-logging truncates to info",
+			logrusLogger: func() logrus.FieldLogger {
+				l := logrus.New()
+				l.SetLevel(logrus.TraceLevel)
+
+				return l
+			},
+			logFunc: func(log logr.Logger) {
+				log.V(-10).Info("hello, world")
+			},
+			assertions: map[string]string{
+				"level": "info",
+				"msg":   "hello, world",
+			},
+		},
+		{
+			description: "addative V-logging, negatives ignored",
+			logrusLogger: func() logrus.FieldLogger {
+				l := logrus.New()
+				l.SetLevel(logrus.TraceLevel)
+
+				return l
+			},
+			logFunc: func(log logr.Logger) {
+				log.V(0).V(1).V(-20).V(1).Info("hello, world")
+			},
+			assertions: map[string]string{
+				"level": "trace",
+				"msg":   "hello, world",
+			},
+		},
+		{
 			description: "arguments are added while calling Info()",
 			logrusLogger: func() logrus.FieldLogger {
 				return logrus.New()
