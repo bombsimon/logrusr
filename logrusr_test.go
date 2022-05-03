@@ -60,6 +60,24 @@ func TestLogging(t *testing.T) {
 			},
 		},
 		{
+			description: "set name and values and name again",
+			logFunc: func(log logr.Logger) {
+				log.
+					WithName("main").
+					WithValues("k1", "v1", "k2", "v2").
+					WithName("subpackage").
+					Info("hello, world", "k3", "v3")
+			},
+			assertions: map[string]string{
+				"level":  "info",
+				"msg":    "hello, world",
+				"logger": "main.subpackage",
+				"k1":     "v1",
+				"k2":     "v2",
+				"k3":     "v3",
+			},
+		},
+		{
 			description: "V(0) logging with info level set is shown",
 			logFunc: func(log logr.Logger) {
 				log.V(0).Info("hello, world")

@@ -129,7 +129,7 @@ func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
 // are sent all values will be discarded.
 func (l *logrusr) WithValues(keysAndValues ...interface{}) logr.LogSink {
 	newLogger := l.copyLogger()
-	newLogger.logger = l.logger.WithFields(
+	newLogger.logger = newLogger.logger.WithFields(
 		listToLogrusFields(l.defaultFormatter, keysAndValues...),
 	)
 
@@ -142,7 +142,7 @@ func (l *logrusr) WithName(name string) logr.LogSink {
 	newLogger := l.copyLogger()
 	newLogger.name = append(newLogger.name, name)
 
-	newLogger.logger = l.logger.WithField(
+	newLogger.logger = newLogger.logger.WithField(
 		"logger", strings.Join(newLogger.name, "."),
 	)
 
