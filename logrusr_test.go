@@ -129,7 +129,7 @@ func TestLogging(t *testing.T) {
 			},
 		},
 		{
-			description: "addative V-logging, negatives ignored",
+			description: "additive V-logging, negatives ignored",
 			logrusLevel: logrus.TraceLevel,
 			logFunc: func(log logr.Logger) {
 				log.V(0).V(1).V(-20).V(1).Info("hello, world")
@@ -163,7 +163,7 @@ func TestLogging(t *testing.T) {
 			},
 		},
 		{
-			description: "error logs have the approperate information",
+			description: "error logs have the appropriate information",
 			logFunc: func(log logr.Logger) {
 				log.Error(errors.New("this is error"), "error occurred")
 			},
@@ -272,6 +272,9 @@ func TestLogging(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.description, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+
 			// Use a buffer for our output.
 			logWriter := &bytes.Buffer{}
 
@@ -322,7 +325,7 @@ func TestLogging(t *testing.T) {
 				}
 
 				// Annotate regexp matches with the value starting with a tilde
-				// (~). The tilde will be dropped an used to compile a regexp to
+				// (~). The tilde will be dropped and used to compile a regexp to
 				// match the field.
 				if strings.HasPrefix(v, "~") {
 					assert.Regexp(t, regexp.MustCompile(v[1:]), field)
