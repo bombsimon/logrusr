@@ -48,7 +48,7 @@ func main() {
 	log = logrusr.New(
 		logrusLog,
 		logrusr.WithReportCaller(),
-	).WithCallDepth(0)
+	)
 
 	log.V(0).Info("you should see this as info")
 	log.V(1).Info("you should see this as debug")
