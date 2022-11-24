@@ -19,7 +19,7 @@ const logrusDiffToInfo = 4
 
 // FormatFunc is the function to format log values with for non primitive data.
 // By default, this is empty and the data will be JSON marshaled.
-type FormatFunc func(interface{}) string
+type FormatFunc func(interface{}) interface{}
 
 // Option is options to give when construction a logrusr logger.
 type Option func(l *logrusr)
@@ -156,7 +156,7 @@ func (l *logrusr) WithName(name string) logr.LogSink {
 }
 
 // listToLogrusFields converts a list of arbitrary length to key/value paris.
-func listToLogrusFields(formatter func(interface{}) string, keysAndValues ...interface{}) logrus.Fields {
+func listToLogrusFields(formatter FormatFunc, keysAndValues ...interface{}) logrus.Fields {
 	f := make(logrus.Fields)
 
 	// Skip all fields if it's not an even length list.
