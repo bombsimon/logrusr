@@ -22,7 +22,7 @@ func TestLogging(t *testing.T) {
 		description  string
 		logrusLevel  logrus.Level
 		logFunc      func(log logr.Logger)
-		formatter    func(interface{}) string
+		formatter    FormatFunc
 		reportCaller bool
 		defaultName  []string
 		assertions   map[string]string
@@ -212,7 +212,7 @@ func TestLogging(t *testing.T) {
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world", "list", []int{1, 2, 3})
 			},
-			formatter: func(val interface{}) string {
+			formatter: func(val interface{}) interface{} {
 				return fmt.Sprintf("%v", val)
 			},
 			assertions: map[string]string{
