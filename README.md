@@ -11,7 +11,7 @@ A [logr](https://github.com/go-logr/logr) implementation using
 
 ```go
 import (
-    "github.com/bombsimon/logrusr/v3"
+    "github.com/bombsimon/logrusr/v4"
     "github.com/go-logr/logr"
     "github.com/sirupsen/logrus"
 )
