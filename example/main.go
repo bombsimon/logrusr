@@ -55,4 +55,24 @@ func main() {
 	log.V(2).Info("you should see this as trace")
 	log.V(1).V(1).Info("you should see this as trace")
 	log.V(10).Info("you should not see this")
+
+	fmt.Println("")
+
+	type myInt int
+
+	logrusLog = logrus.New()
+	logrusLog.SetFormatter(&logrus.JSONFormatter{})
+
+	log = logrusr.New(
+		logrusLog,
+		logrusr.WithFormatter(func(in interface{}) interface{} {
+			if v, ok := in.(myInt); ok && v == 1 {
+				return "1"
+			}
+
+			return in
+		}),
+	)
+
+	log.Info("custom types", "my_int", myInt(1), "my_other_int", myInt(2))
 }
