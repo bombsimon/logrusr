@@ -18,7 +18,8 @@ import (
 const logrusDiffToInfo = 4
 
 // FormatFunc is the function to format log values with for non primitive data.
-// By default, this is empty and the data will be JSON marshaled.
+// If this is not set (default) all unknown types will be JSON marshaled and
+// added as a string.
 type FormatFunc func(interface{}) interface{}
 
 // Option is options to give when construction a logrusr logger.
@@ -27,7 +28,7 @@ type Option func(l *logrusr)
 // WithFormatter will set the FormatFunc to use.
 func WithFormatter(f FormatFunc) Option {
 	return func(l *logrusr) {
-		l.defaultFormatter = f
+		l.formatter = f
 	}
 }
 
@@ -51,11 +52,11 @@ func WithName(name ...string) Option {
 }
 
 type logrusr struct {
-	name             []string
-	depth            int
-	reportCaller     bool
-	logger           *logrus.Entry
-	defaultFormatter FormatFunc
+	name         []string
+	depth        int
+	reportCaller bool
+	logger       *logrus.Entry
+	formatter    FormatFunc
 }
 
 // New will return a new logr.Logger created from a logrus.FieldLogger.
@@ -110,7 +111,7 @@ func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
 	}
 
 	log.
-		WithFields(listToLogrusFields(l.defaultFormatter, keysAndValues...)).
+		WithFields(listToLogrusFields(l.formatter, keysAndValues...)).
 		Log(logrus.Level(level+logrusDiffToInfo), msg)
 }
 
@@ -124,7 +125,7 @@ func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
 	}
 
 	log.
-		WithFields(listToLogrusFields(l.defaultFormatter, keysAndValues...)).
+		WithFields(listToLogrusFields(l.formatter, keysAndValues...)).
 		WithError(err).
 		Error(msg)
 }
@@ -136,7 +137,7 @@ func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
 func (l *logrusr) WithValues(keysAndValues ...interface{}) logr.LogSink {
 	newLogger := l.copyLogger()
 	newLogger.logger = newLogger.logger.WithFields(
-		listToLogrusFields(l.defaultFormatter, keysAndValues...),
+		listToLogrusFields(l.formatter, keysAndValues...),
 	)
 
 	return newLogger
@@ -197,11 +198,11 @@ func listToLogrusFields(formatter FormatFunc, keysAndValues ...interface{}) logr
 // the formatter and actual logrus logger.
 func (l *logrusr) copyLogger() *logrusr {
 	newLogger := &logrusr{
-		name:             make([]string, len(l.name)),
-		depth:            l.depth,
-		reportCaller:     l.reportCaller,
-		logger:           l.logger.Dup(),
-		defaultFormatter: l.defaultFormatter,
+		name:         make([]string, len(l.name)),
+		depth:        l.depth,
+		reportCaller: l.reportCaller,
+		logger:       l.logger.Dup(),
+		formatter:    l.formatter,
 	}
 
 	copy(newLogger.name, l.name)
