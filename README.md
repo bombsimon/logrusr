@@ -1,5 +1,6 @@
 # Logrusr
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/bombsimon/logrusr.svg)](https://pkg.go.dev/github.com/bombsimon/logrusr/v4)
 [![GitHub Actions](https://github.com/bombsimon/logrusr/actions/workflows/go.yml/badge.svg)](https://github.com/bombsimon/logrusr/actions/workflows/go.yml)
 [![Coverage Status](https://coveralls.io/repos/github/bombsimon/logrusr/badge.svg?branch=main)](https://coveralls.io/github/bombsimon/logrusr?branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bombsimon/logrusr)](https://goreportcard.com/report/github.com/bombsimon/logrusr)
