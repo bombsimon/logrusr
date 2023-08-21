@@ -268,6 +268,21 @@ func TestLogging(t *testing.T) {
 				"caller": `~testing.go:\d+`,
 			},
 		},
+		{
+			description: "with call depth is additive",
+			logFunc: func(log logr.Logger) {
+				log.
+					WithCallDepth(1).
+					WithCallDepth(1).
+					Info("hello, world")
+			},
+			reportCaller: true,
+			assertions: map[string]string{
+				"level":  "info",
+				"msg":    "hello, world",
+				"caller": `~testing.go:\d+`,
+			},
+		},
 	}
 
 	for _, tc := range cases {
