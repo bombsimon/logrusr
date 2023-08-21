@@ -214,7 +214,7 @@ func (l *logrusr) copyLogger() *logrusr {
 // when reporting caller.
 func (l *logrusr) WithCallDepth(depth int) logr.LogSink {
 	newLogger := l.copyLogger()
-	newLogger.depth = depth
+	newLogger.depth += depth
 
 	return newLogger
 }
