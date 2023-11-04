@@ -8,6 +8,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type customType string
+
+func (c customType) MarshalLog() interface{} {
+	return "custom marshal message"
+}
+
 func main() {
 	logrusLog := logrus.New()
 	log := logrusr.New(logrusLog)
@@ -75,4 +81,7 @@ func main() {
 	)
 
 	log.Info("custom types", "my_int", myInt(1), "my_other_int", myInt(2))
+
+	myString := customType("original value")
+	log.Info("custom marshaller", "my_string", myString)
 }

@@ -15,6 +15,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type reverseString string
+
+func (rs reverseString) MarshalLog() interface{} {
+	runes := []rune(rs)
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+
+	return string(runes)
+}
+
 func TestLogging(t *testing.T) {
 	t.Parallel()
 
@@ -281,6 +292,22 @@ func TestLogging(t *testing.T) {
 				"level":  "info",
 				"msg":    "hello, world",
 				"caller": `~testing.go:\d+`,
+			},
+		},
+		{
+			description: "custom marshaler used",
+			logFunc: func(log logr.Logger) {
+				log.Info("reversed",
+					"forward", "hello, world",
+					"reversed", reverseString("hello, world"),
+				)
+			},
+			reportCaller: true,
+			assertions: map[string]string{
+				"level":    "info",
+				"msg":      "reversed",
+				"forward":  "hello, world",
+				"reversed": "dlrow ,olleh",
 			},
 		},
 	}
