@@ -49,6 +49,19 @@ func TestLogging(t *testing.T) {
 			},
 		},
 		{
+			description: "log errors",
+			logFunc: func(log logr.Logger) {
+				var empty error
+				log.Info("hello, world", "error", errors.New("test"), "empty", empty)
+			},
+			assertions: map[string]string{
+				"level": "info",
+				"msg":   "hello, world",
+				"error": "test",
+				"empty": "null",
+			},
+		},
+		{
 			description: "set name once",
 			logFunc: func(log logr.Logger) {
 				log.WithName("main").Info("hello, world")
