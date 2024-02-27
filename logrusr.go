@@ -1,6 +1,7 @@
 package logrusr
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -199,4 +200,17 @@ func (l *logrusr) caller() string {
 	}
 
 	return fmt.Sprintf("%s:%d", filepath.Base(file), line)
+}
+
+// formatterOrMarshal will format the value with the format function if any,
+// otherwise it will use `json.Marshal` and return the marshalled value as a
+// string.
+func formatterOrMarshal(value any, formatter FormatFunc) interface{} {
+	if formatter != nil {
+		return formatter(value)
+	}
+
+	j, _ := json.Marshal(value)
+
+	return string(j)
 }

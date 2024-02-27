@@ -4,8 +4,6 @@
 package logrusr
 
 import (
-	"encoding/json"
-
 	"github.com/go-logr/logr"
 	"github.com/sirupsen/logrus"
 )
@@ -44,12 +42,7 @@ func listToLogrusFields(formatter FormatFunc, keysAndValues ...interface{}) logr
 			f[s] = string(vVal)
 
 		default:
-			if formatter != nil {
-				f[s] = formatter(v)
-			} else {
-				j, _ := json.Marshal(vVal)
-				f[s] = string(j)
-			}
+			f[s] = formatterOrMarshal(v, formatter)
 		}
 	}
 
