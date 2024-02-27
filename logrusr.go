@@ -1,7 +1,6 @@
 package logrusr
 
 import (
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -128,8 +127,8 @@ func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
 	}
 
 	log.
-		WithFields(listToLogrusFields(l.formatter, keysAndValues...)).
 		WithError(err).
+		WithFields(listToLogrusFields(l.formatter, keysAndValues...)).
 		Error(msg)
 }
 
@@ -157,52 +156,6 @@ func (l *logrusr) WithName(name string) logr.LogSink {
 	)
 
 	return newLogger
-}
-
-// listToLogrusFields converts a list of arbitrary length to key/value paris.
-func listToLogrusFields(formatter FormatFunc, keysAndValues ...interface{}) logrus.Fields {
-	f := make(logrus.Fields)
-
-	// Skip all fields if it's not an even length list.
-	if len(keysAndValues)%2 != 0 {
-		return f
-	}
-
-	for i := 0; i < len(keysAndValues); i += 2 {
-		k, v := keysAndValues[i], keysAndValues[i+1]
-
-		s, ok := k.(string)
-		if !ok {
-			continue
-		}
-
-		if v, ok := v.(logr.Marshaler); ok {
-			f[s] = v.MarshalLog()
-			continue
-		}
-
-		// Try to avoid marshaling known types.
-		switch vVal := v.(type) {
-		case int, int8, int16, int32, int64,
-			uint, uint8, uint16, uint32, uint64,
-			float32, float64, complex64, complex128,
-			string, bool, error:
-			f[s] = vVal
-
-		case []byte:
-			f[s] = string(vVal)
-
-		default:
-			if formatter != nil {
-				f[s] = formatter(v)
-			} else {
-				j, _ := json.Marshal(vVal)
-				f[s] = string(j)
-			}
-		}
-	}
-
-	return f
 }
 
 // copyLogger copies the logger creating a new slice of the name but preserving
