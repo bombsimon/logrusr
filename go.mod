@@ -1,9 +1,9 @@
 module github.com/bombsimon/logrusr/v4
 
-go 1.17
+go 1.18
 
 require (
-	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/logr v1.4.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
 )
