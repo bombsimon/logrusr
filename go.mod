@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/go-logr/logr v1.4.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 )
 
 require (
