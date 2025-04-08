@@ -111,3 +111,10 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+
+  settings:
+    gofmt:
+      simplify: true
+      rewrite-rules:
+        - pattern: "interface{}"
+          replacement: "any"

@@ -17,7 +17,7 @@ import (
 
 type reverseString string
 
-func (rs reverseString) MarshalLog() interface{} {
+func (rs reverseString) MarshalLog() any {
 	runes := []rune(rs)
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
 		runes[i], runes[j] = runes[j], runes[i]
@@ -237,7 +237,7 @@ func TestLogging(t *testing.T) {
 			logFunc: func(log logr.Logger) {
 				log.Info("hello, world", "list", []int{1, 2, 3})
 			},
-			formatter: func(val interface{}) interface{} {
+			formatter: func(val any) any {
 				return fmt.Sprintf("%v", val)
 			},
 			assertions: map[string]string{

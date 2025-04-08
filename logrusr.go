@@ -25,7 +25,7 @@ const (
 // FormatFunc is the function to format log values with for non primitive data.
 // If this is not set (default) all unknown types will be JSON marshaled and
 // added as a string.
-type FormatFunc func(interface{}) interface{}
+type FormatFunc func(any) any
 
 // Option is options to give when construction a logrusr logger.
 type Option func(l *logrusr)
@@ -113,7 +113,7 @@ func (l *logrusr) Enabled(level int) bool {
 
 // Info logs info messages if the logger is enabled, that is if the level on the
 // logger is set to logrus.InfoLevel or less.
-func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
+func (l *logrusr) Info(level int, msg string, keysAndValues ...any) {
 	log := l.logger
 	if c := l.caller(); c != "" {
 		log = log.WithField("caller", c)
@@ -128,7 +128,7 @@ func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
 // Error logs error messages. Since the log will be written with `Error` level
 // it won't show if the severity of the underlying logrus logger is less than
 // Error.
-func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
+func (l *logrusr) Error(err error, msg string, keysAndValues ...any) {
 	log := l.logger
 	if c := l.caller(); c != "" {
 		log = log.WithField("caller", c)
@@ -144,7 +144,7 @@ func (l *logrusr) Error(err error, msg string, keysAndValues ...interface{}) {
 // equivalent to logrus WithFields() but takes a list of even arguments
 // (key/value pairs) instead of a map as input. If an odd number of arguments
 // are sent all values will be discarded.
-func (l *logrusr) WithValues(keysAndValues ...interface{}) logr.LogSink {
+func (l *logrusr) WithValues(keysAndValues ...any) logr.LogSink {
 	newLogger := l.copyLogger()
 	newLogger.logger = newLogger.logger.WithFields(
 		listToLogrusFields(l.formatter, keysAndValues...),
@@ -167,7 +167,7 @@ func (l *logrusr) WithName(name string) logr.LogSink {
 }
 
 // listToLogrusFields converts a list of arbitrary length to key/value paris.
-func listToLogrusFields(formatter FormatFunc, keysAndValues ...interface{}) logrus.Fields {
+func listToLogrusFields(formatter FormatFunc, keysAndValues ...any) logrus.Fields {
 	f := make(logrus.Fields)
 
 	// Skip all fields if it's not an even length list.
