@@ -10,7 +10,7 @@ import (
 
 type customType string
 
-func (c customType) MarshalLog() interface{} {
+func (c customType) MarshalLog() any {
 	return "custom marshal message"
 }
 
@@ -71,7 +71,7 @@ func main() {
 
 	log = logrusr.New(
 		logrusLog,
-		logrusr.WithFormatter(func(in interface{}) interface{} {
+		logrusr.WithFormatter(func(in any) any {
 			if v, ok := in.(myInt); ok && v == 1 {
 				return "1"
 			}
