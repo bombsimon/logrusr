@@ -11,11 +11,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// According to the specification of the Logger interface calling the InfoLogger
-// directly on the logger should be the same as calling them on V(0). Since
-// logrus level 0 is PanicLevel and Infolevel doesn't start until V(4) we use
-// this constant to be able to calculate what V(n) values should mean.
-const logrusDiffToInfo = 4
+const (
+	// According to the specification of the Logger interface calling the InfoLogger
+	// directly on the logger should be the same as calling them on V(0). Since
+	// logrus level 0 is PanicLevel and Infolevel doesn't start until V(4) we use
+	// this constant to be able to calculate what V(n) values should mean.
+	logrusDiffToInfo = 4
+
+	// Frames to skip when fetching caller.
+	logrusCallFramesSkip = 3
+)
 
 // FormatFunc is the function to format log values with for non primitive data.
 // If this is not set (default) all unknown types will be JSON marshaled and
@@ -102,6 +107,7 @@ func (l *logrusr) Enabled(level int) bool {
 	// logrus.InfoLevel has value 4 so if the level on the logger is set to 0 we
 	// should only be seen as enabled if the logrus logger has a severity of
 	// info or higher.
+	//nolint:gosec // We can't affect the types
 	return l.logger.Logger.IsLevelEnabled(logrus.Level(level + logrusDiffToInfo))
 }
 
@@ -115,6 +121,7 @@ func (l *logrusr) Info(level int, msg string, keysAndValues ...interface{}) {
 
 	log.
 		WithFields(listToLogrusFields(l.formatter, keysAndValues...)).
+		//nolint:gosec // We can't affect the types
 		Log(logrus.Level(level+logrusDiffToInfo), msg)
 }
 
@@ -196,6 +203,7 @@ func listToLogrusFields(formatter FormatFunc, keysAndValues ...interface{}) logr
 			if formatter != nil {
 				f[s] = formatter(v)
 			} else {
+				//nolint:errchkjson // This is just best effort
 				j, _ := json.Marshal(vVal)
 				f[s] = string(j)
 			}
@@ -240,7 +248,7 @@ func (l *logrusr) caller() string {
 	// +1 for this frame.
 	// +1 for frame calling here (Info/Error)
 	// +1 for logr frame
-	_, file, line, ok := runtime.Caller(l.depth + 3)
+	_, file, line, ok := runtime.Caller(l.depth + logrusCallFramesSkip)
 	if !ok {
 		return ""
 	}

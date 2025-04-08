@@ -211,6 +211,7 @@ func TestLogging(t *testing.T) {
 		{
 			description: "bad number of arguments discards all",
 			logFunc: func(log logr.Logger) {
+				//nolint:loggercheck // Intentional check
 				log.Info("hello, world", "animal", "walrus", "foo")
 			},
 			assertions: map[string]string{
@@ -328,6 +329,7 @@ func TestLogging(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.description, func(t *testing.T) {
 			tc := tc
+
 			t.Parallel()
 
 			// Use a buffer for our output.
