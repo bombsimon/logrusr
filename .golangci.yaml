@@ -35,12 +35,11 @@ linters:
     - forcetypeassert
     - gochecknoglobals
     - gochecknoinits
-    - goconst
     - gocritic
     - godot
     - godox
     - gomoddirectives
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
     - gosec
     - gosmopolitan
@@ -82,7 +81,7 @@ linters:
     - wastedassign
     - whitespace
     - wrapcheck
-    - wsl
+    - wsl_v5
 
   settings:
     misspell:
