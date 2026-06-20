@@ -311,7 +311,8 @@ func TestLogging(t *testing.T) {
 		{
 			description: "custom marshaler used",
 			logFunc: func(log logr.Logger) {
-				log.Info("reversed",
+				log.Info(
+					"reversed",
 					"forward", "hello, world",
 					"reversed", reverseString("hello, world"),
 				)
@@ -364,7 +365,7 @@ func TestLogging(t *testing.T) {
 				return
 			}
 
-			var loggedLine map[string]string
+			loggedLine := map[string]string{}
 			err := json.Unmarshal(logWriter.Bytes(), &loggedLine)
 
 			require.NoError(t, err)
