@@ -3,7 +3,7 @@ module github.com/bombsimon/logrusr/v4
 go 1.23
 
 require (
-	github.com/go-logr/logr v1.4.3
+	github.com/go-logr/logr v1.4.4
 	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
 )
